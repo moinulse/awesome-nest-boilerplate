@@ -66,6 +66,22 @@ export class AuthController {
     });
   }
 
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: LoginPayloadDto, description: 'Refresh access token' })
+  async refreshToken(
+    @Body('refreshToken') refreshToken: string,
+  ): Promise<LoginPayloadDto> {
+    const userEntity = await this.authService.validateRefreshToken(refreshToken);
+
+    const token = await this.authService.createAccessToken({
+      userId: userEntity.id,
+      role: userEntity.role,
+    });
+
+    return new LoginPayloadDto(userEntity.toDto(), token);
+  }
+
   @Version('1')
   @Get('me')
   @HttpCode(HttpStatus.OK)

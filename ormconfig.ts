@@ -22,4 +22,12 @@ export const dataSource = new DataSource({
     'src/modules/**/*.view-entity{.ts,.js}',
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
+  synchronize: false,
+  logging: true,
+  migrationsRun: true,
+  extra: {
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  },
 });

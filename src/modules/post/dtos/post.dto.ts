@@ -11,11 +11,11 @@ export class PostDto extends AbstractDto {
   description?: string;
 
   @ApiPropertyOptional()
-  info: string;
+  info?: string;
 
   constructor(postEntity: PostEntity) {
     super(postEntity);
 
-    this.info = 'keywords.admin';
+    this.info = postEntity.info;
   }
 }
