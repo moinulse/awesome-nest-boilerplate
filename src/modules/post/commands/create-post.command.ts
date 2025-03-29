@@ -25,7 +25,7 @@ export class CreatePostHandler
     private postRepository: Repository<PostEntity>,
   ) {}
 
-  async execute(command: CreatePostCommand) {
+  async execute(command: CreatePostCommand): Promise<PostEntity> {
     const { userId, createPostDto } = command;
     const postEntity = this.postRepository.create({ userId, ...createPostDto });
 

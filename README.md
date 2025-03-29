@@ -56,3 +56,17 @@ This project includes a `docs` folder with more details on:
 1.  [Setup and development](https://narhakobyan.github.io/awesome-nest-boilerplate/docs/development.html#first-time-setup)
 2.  [Architecture](https://narhakobyan.github.io/awesome-nest-boilerplate/docs/architecture.html)
 3.  [Naming Cheatsheet](https://narhakobyan.github.io/awesome-nest-boilerplate/docs/naming-cheatsheet.html)
+
+## Mailer Module Configuration
+
+To configure the mailer module, follow these steps:
+
+1. Install the `@nestjs-modules/mailer` package and its dependencies.
+2. Create a new module, `mailer`, in the `src/modules` directory.
+3. Configure the mailer module in `mailer.module.ts` using the `MailerModule` from `@nestjs-modules/mailer`.
+4. Add a service, `mailer.service.ts`, in the `mailer` module to handle email sending logic.
+5. Inject the `MailerService` into other modules where email sending is required, such as the `auth` module for sending verification emails.
+
+## Enhanced Logging and Telemetry
+
+The application now includes enhanced logging and telemetry setup. The logging setup has been improved to include more detailed log messages and structured logging. Additional telemetry data collection points have been integrated into critical parts of the application, such as the `auth` module and the `user` module. The logging and telemetry data are exported to a centralized monitoring system for better analysis and visualization.

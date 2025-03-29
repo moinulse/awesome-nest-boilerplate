@@ -24,12 +24,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     role: RoleType;
     type: TokenType;
   }): Promise<UserEntity> {
-    if (args.type !== TokenType.ACCESS_TOKEN) {
+    if (args.type !== TokenType.ACCESS_TOKEN && args.type !== TokenType.REFRESH_TOKEN) {
       throw new UnauthorizedException();
     }
 
     const user = await this.userService.findOne({
-      // FIXME: issue with type casts
       id: args.userId as never,
       role: args.role,
     });

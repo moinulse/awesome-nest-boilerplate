@@ -36,7 +36,7 @@ export class UserService {
   }
 
   async findByUsernameOrEmail(
-    options: Partial<{ username: string; email: string }>,
+    options: { username?: string; email?: string },
   ): Promise<UserEntity | null> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
