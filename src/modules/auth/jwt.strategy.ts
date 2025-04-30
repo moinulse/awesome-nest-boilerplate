@@ -2,8 +2,9 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-import { type RoleType, TokenType } from '../../constants';
+import { TokenType } from '../../constants';
 import { ApiConfigService } from '../../shared/services/api-config.service';
+import { type Uuid } from '../../types';
 import { type UserEntity } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 
@@ -19,23 +20,30 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(args: {
+  async validate(payload: {
     userId: Uuid;
-    role: RoleType;
+    roles: string[];
     type: TokenType;
   }): Promise<UserEntity> {
-    if (args.type !== TokenType.ACCESS_TOKEN) {
-      throw new UnauthorizedException();
+    if (payload.type !== TokenType.ACCESS_TOKEN) {
+      throw new UnauthorizedException('Invalid token type');
     }
 
     const user = await this.userService.findOne({
-      // FIXME: issue with type casts
-      id: args.userId as never,
-      role: args.role,
+      where: { id: payload.userId },
+      relations: ['roles'],
     });
 
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('User not found');
+    }
+
+    const hasValidRoles = payload.roles.every((role) =>
+      user.roles.some((userRole) => userRole.name === role),
+    );
+
+    if (!hasValidRoles) {
+      throw new UnauthorizedException('User roles do not match token roles');
     }
 
     return user;

@@ -87,7 +87,7 @@ export class ApiConfigService {
     return {
       entities,
       migrations,
-      keepConnectionAlive: !this.isTest,
+      // keepConnectionAlive: !this.isTest,
       dropSchema: this.isTest,
       type: 'postgres',
       name: 'default',

@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity';
-import { UseDto } from '../../decorators';
+import { UseDto } from '../../decorators/use-dto.decorator';
 import { UserDto, type UserDtoOptions } from './dtos/user.dto';
 import { UserEntity } from './user.entity';
 

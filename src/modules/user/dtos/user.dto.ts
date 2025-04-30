@@ -1,11 +1,13 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+
 import { AbstractDto } from '../../../common/dto/abstract.dto';
-import { RoleType } from '../../../constants';
 import {
   BooleanFieldOptional,
   EmailFieldOptional,
-  EnumFieldOptional,
   StringFieldOptional,
 } from '../../../decorators';
+import { RoleDto } from '../../iam/dto/role.dto';
 import { type UserEntity } from '../user.entity';
 
 // TODO, remove this class and use constructor's second argument's type
@@ -21,8 +23,9 @@ export class UserDto extends AbstractDto {
   @StringFieldOptional({ nullable: true })
   username!: string;
 
-  @EnumFieldOptional(() => RoleType)
-  role?: RoleType;
+  @ApiProperty({ type: () => RoleDto, isArray: true, nullable: true })
+  @Type(() => RoleDto)
+  roles?: RoleDto[] | null;
 
   @EmailFieldOptional({ nullable: true })
   email?: string | null;
@@ -37,7 +40,7 @@ export class UserDto extends AbstractDto {
     super(user);
     this.firstName = user.firstName;
     this.lastName = user.lastName;
-    this.role = user.role;
+    this.roles = user.roles.map((role) => role.toDto());
     this.email = user.email;
     this.avatar = user.avatar;
     this.isActive = options?.isActive;

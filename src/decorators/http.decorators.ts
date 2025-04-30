@@ -10,23 +10,25 @@ import {
 import { type Type } from '@nestjs/common/interfaces';
 import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
-import { type RoleType } from '../constants';
 import { AuthGuard } from '../guards/auth.guard';
-import { RolesGuard } from '../guards/roles.guard';
+import { RBACGuard } from '../guards/rbac.guard';
 import { AuthUserInterceptor } from '../interceptors/auth-user-interceptor.service';
 import { PublicRoute } from './public-route.decorator';
-import { Roles } from './roles.decorator';
+
+export const PERMISSIONS_KEY = 'permissions';
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const Permissions = (...permissions: string[]) =>
+  SetMetadata(PERMISSIONS_KEY, permissions);
 
 export function Auth(
-  roles: RoleType[] = [],
+  permissions: string[] = [],
   options?: Partial<{ public: boolean }>,
 ): MethodDecorator {
   const isPublicRoute = options?.public;
 
   return applyDecorators(
-    SetMetadata('roles', roles),
-    Roles(roles),
-    UseGuards(AuthGuard({ public: isPublicRoute }), RolesGuard),
+    Permissions(...permissions),
+    UseGuards(AuthGuard({ public: isPublicRoute }), RBACGuard),
     ApiBearerAuth(),
     UseInterceptors(AuthUserInterceptor),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),

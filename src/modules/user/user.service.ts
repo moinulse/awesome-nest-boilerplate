@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
-import { type FindOptionsWhere, Repository } from 'typeorm';
+import { type FindOneOptions, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
 import { type PageDto } from '../../common/dto/page.dto';
@@ -31,8 +31,8 @@ export class UserService {
   /**
    * Find single user
    */
-  findOne(findData: FindOptionsWhere<UserEntity>): Promise<UserEntity | null> {
-    return this.userRepository.findOneBy(findData);
+  findOne(findData: FindOneOptions<UserEntity>): Promise<UserEntity | null> {
+    return this.userRepository.findOne(findData);
   }
 
   async findByUsernameOrEmail(
