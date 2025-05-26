@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      target: development
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Mount source code for hot reloading
+      - ./src:/app/src:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./nest-cli.json:/app/nest-cli.json:ro
+      # Exclude node_modules to avoid conflicts
+      - /app/node_modules
+    command: ['yarn', 'watch:dev']
+    stdin_open: true
+    tty: true
+
+  awesome-nest-db:
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-awesome_nest_dev}

@@ -1,0 +1,45 @@
+# syntax=docker/dockerfile:1
+
+# Development stage
+FROM node:20-alpine AS development
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+# Create app directory and user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001
+
+WORKDIR /app
+
+# Change ownership of the working directory
+RUN chown -R nestjs:nodejs /app
+
+# Switch to non-root user
+USER nestjs
+
+# Copy package files
+COPY --chown=nestjs:nodejs package.json yarn.lock ./
+
+# Install all dependencies (including dev dependencies)
+RUN yarn install --frozen-lockfile --network-timeout 100000
+
+# Copy source code
+COPY --chown=nestjs:nodejs . .
+
+# Set environment variables
+ENV NODE_ENV=development
+ENV PORT=3000
+
+# Expose port
+EXPOSE 3000
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the development server with hot reloading
+CMD ["yarn", "watch:dev"]

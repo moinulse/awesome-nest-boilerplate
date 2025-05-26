@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # Development application service
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: awesome-nest-app-dev
+    restart: unless-stopped
+    ports:
+      - '${PORT:-3000}:3000'
+      - '9229:9229' # Debug port
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=awesome-nest-db-dev
+      - DB_PORT=5432
+    depends_on:
+      - awesome-nest-db-dev
+    env_file:
+      - .env
+    volumes:
+      # Mount source code for hot reloading
+      - ./src:/app/src:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./nest-cli.json:/app/nest-cli.json:ro
+      # Exclude node_modules to avoid conflicts
+      - /app/node_modules
+    networks:
+      - awesome-nest-network-dev
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:3000/health',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    stdin_open: true
+    tty: true
+
+  # Development database service
+  awesome-nest-db-dev:
+    image: postgres:16-alpine
+    container_name: awesome-nest-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-awesome_nest_dev}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      TZ: 'GMT'
+      PGTZ: 'GMT'
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - awesome-nest-db-dev-vol:/var/lib/postgresql/data
+      - type: bind
+        source: ./init-data.sh
+        target: /docker-entrypoint-initdb.d/init-data.sh
+        read_only: true
+    env_file:
+      - .env
+    networks:
+      - awesome-nest-network-dev
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-awesome_nest_dev}',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Database administration tool (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: awesome-nest-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '8080:80'
+    depends_on:
+      - awesome-nest-db-dev
+    networks:
+      - awesome-nest-network-dev
+    profiles:
+      - tools
+
+networks:
+  awesome-nest-network-dev:
+    driver: bridge
+
+volumes:
+  awesome-nest-db-dev-vol:
+    driver: local
