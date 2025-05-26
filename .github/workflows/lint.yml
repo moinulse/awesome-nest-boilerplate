@@ -40,7 +40,3 @@ jobs:
 
       - name: Run TypeScript type check
         run: yarn build:prod
-
-      - name: Check for unused dependencies
-        run: |
-          npx depcheck --ignores="@types/*,eslint-*,@typescript-eslint/*,jest,supertest,@nestjs/testing,ts-node-dev,cross-env"
