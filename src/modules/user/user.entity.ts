@@ -1,9 +1,15 @@
-import { Column, Entity, OneToMany, OneToOne, VirtualColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToOne,
+  VirtualColumn,
+} from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity';
-import { RoleType } from '../../constants';
-import { UseDto } from '../../decorators';
-import { PostEntity } from '../post/post.entity';
+import { UseDto } from '../../decorators/use-dto.decorator';
+import { RoleEntity } from '../iam/entities/role.entity';
 import { UserDto, type UserDtoOptions } from './dtos/user.dto';
 import { UserSettingsEntity } from './user-settings.entity';
 
@@ -16,8 +22,13 @@ export class UserEntity extends AbstractEntity<UserDto, UserDtoOptions> {
   @Column({ nullable: true, type: 'varchar' })
   lastName!: string | null;
 
-  @Column({ type: 'enum', enum: RoleType, default: RoleType.USER })
-  role!: RoleType;
+  @ManyToMany(() => RoleEntity, (role) => role.users, { eager: true })
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles!: RoleEntity[];
 
   @Column({ unique: true, nullable: true, type: 'varchar' })
   email!: string | null;
@@ -39,7 +50,4 @@ export class UserEntity extends AbstractEntity<UserDto, UserDtoOptions> {
 
   @OneToOne(() => UserSettingsEntity, (userSettings) => userSettings.user)
   settings?: UserSettingsEntity;
-
-  @OneToMany(() => PostEntity, (postEntity) => postEntity.user)
-  posts?: PostEntity[];
 }

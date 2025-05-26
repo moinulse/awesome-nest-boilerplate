@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types,@typescript-eslint/no-unsafe-argument */
 import { applyDecorators, type Type, UseInterceptors } from '@nestjs/common';
 import {
   PARAMTYPES_METADATA,
@@ -21,7 +20,7 @@ import _ from 'lodash';
 
 import { type IApiFile } from '../interfaces';
 
-function explore(instance: Object, propertyKey: string | symbol) {
+function explore(instance: object, propertyKey: string | symbol) {
   const types: Array<Type<unknown>> = Reflect.getMetadata(
     PARAMTYPES_METADATA,
     instance,
@@ -46,7 +45,6 @@ function explore(instance: Object, propertyKey: string | symbol) {
   for (const [key, value] of Object.entries(parametersWithType)) {
     const keyPair = key.split(':');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     if (Number(keyPair[0]) === RouteParamtypes.BODY) {
       return value.type;
     }

@@ -6,7 +6,6 @@ import {
 import { Reflector } from '@nestjs/core';
 import _ from 'lodash';
 
-import { type RoleType } from '../constants';
 import { type UserEntity } from '../modules/user/user.entity';
 
 @Injectable()
@@ -14,15 +13,24 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.get<RoleType[]>('roles', context.getHandler());
+    const requiredRoles = this.reflector.get<string[]>(
+      'roles',
+      context.getHandler(),
+    );
 
-    if (_.isEmpty(roles)) {
+    if (_.isEmpty(requiredRoles)) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest();
-    const user = <UserEntity>request.user;
+    const user = request.user as UserEntity | undefined;
 
-    return roles.includes(user.role);
+    // If the user does not have roles, deny access
+    if (!user?.roles || user.roles.length === 0) {
+      return false;
+    }
+
+    // Check if any of the user's roles match the required roles
+    return user.roles.some((role) => requiredRoles.includes(role.name));
   }
 }

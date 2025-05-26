@@ -3,9 +3,18 @@ import { ApiProperty, type ApiPropertyOptions } from '@nestjs/swagger';
 import { getVariableName } from '../common/utils';
 
 export function ApiBooleanProperty(
-  options: Omit<ApiPropertyOptions, 'type'> = {},
+  options: Omit<ApiPropertyOptions, 'type' | 'enum' | 'enumName'> = {}, // Exclude enum properties
 ): PropertyDecorator {
-  return ApiProperty({ type: Boolean, ...options });
+  return ApiProperty({
+    type: Boolean,
+    description: options.description,
+    required: options.required as boolean | undefined, // Cast required
+    nullable: options.nullable,
+    deprecated: options.deprecated,
+    example: options.example,
+    examples: options.examples,
+    default: options.default,
+  });
 }
 
 export function ApiBooleanPropertyOptional(
@@ -15,14 +24,21 @@ export function ApiBooleanPropertyOptional(
 }
 
 export function ApiUUIDProperty(
-  options: Omit<ApiPropertyOptions, 'type' | 'format'> &
+  options: Omit<ApiPropertyOptions, 'type' | 'format' | 'enum' | 'enumName'> & // Exclude enum properties
     Partial<{ each: boolean }> = {},
 ): PropertyDecorator {
+  // Explicitly pass common properties
   return ApiProperty({
     type: options.each ? [String] : String,
     format: 'uuid',
     isArray: options.each,
-    ...options,
+    description: options.description,
+    required: options.required as boolean | undefined, // Cast required
+    nullable: options.nullable,
+    deprecated: options.deprecated,
+    example: options.example,
+    examples: options.examples,
+    default: options.default,
   });
 }
 
@@ -41,20 +57,30 @@ export function ApiEnumProperty<TEnum>(
   const enumValue = getEnum() as any;
 
   return ApiProperty({
-    type: 'enum',
-    // throw error during the compilation of swagger
-    // isArray: options.each,
     enum: enumValue,
     enumName: getVariableName(getEnum),
-    ...options,
+    isArray: options.each, // Set isArray based on options.each
+    description: options.description,
+    required: options.required as boolean | undefined, // Cast required
+    nullable: options.nullable,
+    deprecated: options.deprecated,
+    example: options.example,
+    examples: options.examples,
+    default: options.default,
+    // Add other safe properties from options if needed
   });
 }
 
 export function ApiEnumPropertyOptional<TEnum>(
   getEnum: () => TEnum,
-  options: Omit<ApiPropertyOptions, 'type' | 'required'> & {
+  options: Omit<
+    ApiPropertyOptions,
+    'type' | 'required' | 'enum' | 'enumName'
+  > & {
+    // Keep Omit consistent
     each?: boolean;
   } = {},
 ): PropertyDecorator {
-  return ApiEnumProperty(getEnum, { required: false, ...options });
+  // Pass required: false explicitly
+  return ApiEnumProperty(getEnum, { ...options, required: false });
 }

@@ -8,9 +8,10 @@ import { ClsModule } from 'nestjs-cls';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 
+import { dataSourceOptions } from './data-source';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module';
-import { PostModule } from './modules/post/post.module';
+import { IAMModule } from './modules/iam/iam.module';
 import { UserModule } from './modules/user/user.module';
 import { ApiConfigService } from './shared/services/api-config.service';
 import { SharedModule } from './shared/shared.module';
@@ -19,7 +20,7 @@ import { SharedModule } from './shared/shared.module';
   imports: [
     AuthModule,
     UserModule,
-    PostModule,
+    IAMModule,
     ClsModule.forRoot({
       global: true,
       middleware: {
@@ -38,13 +39,10 @@ import { SharedModule } from './shared/shared.module';
       envFilePath: '.env',
     }),
     TypeOrmModule.forRootAsync({
-      imports: [SharedModule],
-      useFactory: (configService: ApiConfigService) =>
-        configService.postgresConfig,
-      inject: [ApiConfigService],
-      dataSourceFactory: (options) => {
+      useFactory: () => dataSourceOptions,
+      dataSourceFactory: async (options) => {
         if (!options) {
-          throw new Error('Invalid options passed');
+          throw new Error('Invalid options passed to data source factory');
         }
 
         return Promise.resolve(
