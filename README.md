@@ -1,9 +1,18 @@
 # Nestjs Awesome Boilerplate 
 
 ## Prerequisite
-- [Nodejs 20 above](https://github.com/nvm-sh/nvm)
+- [Node.js 20 above](https://github.com/nvm-sh/nvm)
 - [Docker + Docker Compose](https://github.com/docker/docker-install)
 - [Yarn] `npm i -g yarn`
+
+## Tech Stack
+- **NestJS**: v11.1.1 - A progressive Node.js framework
+- **TypeScript**: v5.8.3 - Strongly typed JavaScript
+- **ESLint**: v9.27.0 - Code linting with flat config
+- **Husky**: v9.1.7 - Git hooks for code quality
+- **Prettier**: Code formatting
+- **TypeORM**: Database ORM
+- **Jest**: Testing framework
 
 ## Getting started
 
@@ -30,7 +39,31 @@ docker compose up
 yarn watch:dev
 
 # 5. Read the documentation linked below for "Setup and development".
+# Run linting
+yarn lint
+
+# Run linting with auto-fix
+yarn lint:fix
+
+# Run tests
+yarn test
+
+# Run tests in watch mode
+yarn test:watch
 ```
+
+### Code Quality & Git Hooks
+
+This project uses modern tooling for code quality:
+
+- **ESLint v9** with flat config format (`eslint.config.mjs`)
+- **Husky v9** for Git hooks
+- **lint-staged** for pre-commit linting
+- **commitlint** for conventional commit messages
+
+Git hooks are automatically set up when you run `yarn` (via the `prepare` script). The hooks will:
+- Run ESLint and Prettier on staged files before commit
+- Validate commit messages follow conventional commit format
 
 ### Generate migration
 ```bash
