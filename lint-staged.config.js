@@ -4,9 +4,10 @@ module.exports = {
 
   // All supported files - run Prettier with auto-format
   '*.{ts,tsx,js,jsx,json,md,yml,yaml}': ['prettier --write'],
-  // '{!(package)*.json,*.code-snippets,.!(browserslist)*rc}': [
-  //   'yarn lint:prettier --parser json',
-  // ],
-  // 'package.json': ['yarn lint:prettier'],
-  // '*.md': ['yarn lint:markdownlint', 'yarn lint:prettier'],
+
+  // TypeScript files - run type checking
+  '*.{ts,tsx}': () => 'yarn type-check',
+
+  // Package.json - validate structure and ensure lockfile is up to date
+  'package.json': ['prettier --write', () => 'yarn install --check-files'],
 };

@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "build:prod": "tsc -p tsconfig.build.json",
+    "type-check": "tsc --noEmit --skipLibCheck",
     "start:dev": "ts-node src/main.ts",
     "start:prod": "node dist/main.js",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
