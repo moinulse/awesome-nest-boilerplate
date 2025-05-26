@@ -2,7 +2,7 @@
 
 [![NestJS](https://img.shields.io/badge/NestJS-v11.1.2-red?logo=nestjs&logoColor=white)](https://nestjs.com/)
 [![TypeScript](https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=FFF&style=flat-square)](https://www.typescriptlang.org/)
-[![PostgreSQL](https://img.shields.io/badge/postgresql-4169e1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![PostgreSQL](https://img.shields.io/badge/postgresql-4169e1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > 🎯 An opinionated, production-ready NestJS boilerplate with TypeScript, PostgreSQL, and modern development tools
