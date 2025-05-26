@@ -45,7 +45,6 @@ import { SharedModule } from './shared/shared.module';
           throw new Error('Invalid options passed to data source factory');
         }
 
-        // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject
         return Promise.resolve(
           addTransactionalDataSource(new DataSource(options)),
         );

@@ -8,7 +8,7 @@ export class PublicStrategy extends PassportStrategy(Strategy, 'public') {
     super();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, unused-imports/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   validate(..._args: any[]): any {
     return null;
   }

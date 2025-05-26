@@ -1,7 +1,8 @@
 'use strict'
 
 module.exports = {
-  prompt: ({ prompter, args }) => {
+  // eslint-disable-next-line no-unused-vars
+  prompt: ({ prompter, args: _args }) => {
     return prompter.prompt([
       {
         type: 'input',
