@@ -61,6 +61,16 @@ export class ApiConfigService {
     return value.replaceAll('\\n', '\n');
   }
 
+  private getOptionalString(key: string): string | undefined {
+    const value = this.configService.get<string>(key);
+
+    if (isNil(value)) {
+      return undefined;
+    }
+
+    return value.replaceAll('\\n', '\n');
+  }
+
   get nodeEnv(): string {
     return this.getString('NODE_ENV');
   }
@@ -137,6 +147,39 @@ export class ApiConfigService {
   get appConfig() {
     return {
       port: this.getString('PORT'),
+    };
+  }
+
+  get redisConfig() {
+    return {
+      host: this.getString('REDIS_HOST'),
+      port: this.getNumber('REDIS_PORT'),
+      password: this.getOptionalString('REDIS_PASSWORD'),
+      db: this.getNumber('REDIS_DB'),
+    };
+  }
+
+  get emailConfig() {
+    return {
+      host: this.getString('MAIL_HOST'),
+      port: this.getNumber('MAIL_PORT'),
+      secure: this.getBoolean('MAIL_SECURE'),
+      auth: {
+        user: this.getString('MAIL_USER'),
+        pass: this.getString('MAIL_PASSWORD'),
+      },
+      from: this.getString('MAIL_FROM'),
+    };
+  }
+
+  get bullmqConfig() {
+    return {
+      connection: {
+        host: this.getString('REDIS_HOST'),
+        port: this.getNumber('REDIS_PORT'),
+        password: this.getOptionalString('REDIS_PASSWORD'),
+        db: this.getNumber('REDIS_DB'),
+      },
     };
   }
 

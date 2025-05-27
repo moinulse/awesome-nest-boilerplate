@@ -115,7 +115,6 @@ export default [
       '@typescript-eslint/adjacent-overload-signatures': 'error',
       'max-params': ['error', 7],
       '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
-      // Replaced ban-types with more specific rules in v8
       '@typescript-eslint/no-empty-object-type': 'error',
       '@typescript-eslint/no-unsafe-function-type': 'error',
       '@typescript-eslint/no-wrapper-object-types': 'error',

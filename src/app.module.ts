@@ -10,8 +10,10 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
 
 import { dataSourceOptions } from './data-source';
 import { AuthModule } from './modules/auth/auth.module';
+import { EmailModule } from './modules/email/email.module';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module';
 import { IAMModule } from './modules/iam/iam.module';
+import { QueueModule } from './modules/queue/queue.module';
 import { UserModule } from './modules/user/user.module';
 import { ApiConfigService } from './shared/services/api-config.service';
 import { SharedModule } from './shared/shared.module';
@@ -21,6 +23,8 @@ import { SharedModule } from './shared/shared.module';
     AuthModule,
     UserModule,
     IAMModule,
+    QueueModule,
+    EmailModule,
     ClsModule.forRoot({
       global: true,
       middleware: {
