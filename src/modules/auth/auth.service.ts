@@ -9,6 +9,7 @@ import { type UserEntity } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 import { TokenPayloadDto } from './dto/token-payload.dto';
 import { type UserLoginDto } from './dto/user-login.dto';
+import { type Uuid } from '../../types';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +31,20 @@ export class AuthService {
         userId: data.userId,
         type: TokenType.ACCESS_TOKEN,
         roles: roleNames,
+      }),
+    });
+  }
+
+  async createRefreshToken(data: {
+    userId: Uuid;
+  }): Promise<TokenPayloadDto> {
+    return new TokenPayloadDto({
+      expiresIn:
+        this.configService.authConfig.refreshJwtExpirationTime ??
+        7 * 24 * 60 * 60, // 7 days in seconds as fallback
+      accessToken: await this.jwtService.signAsync({
+        userId: data.userId,
+        type: TokenType.REFRESH_TOKEN,
       }),
     });
   }

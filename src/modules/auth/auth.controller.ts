@@ -2,15 +2,21 @@ import {
   Body,
   Controller,
   Get,
+  Body,
+  Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   UploadedFile,
   Version,
+  Res, // Added Res
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express'; // Added Response
 
 import { ApiFile, Auth, AuthUser } from '../../decorators';
+import { ApiConfigService } from '../../shared/services/api-config.service'; // Added ApiConfigService
 import { type IFile } from '../../interfaces';
 import { UserDto } from '../user/dtos/user.dto';
 import { UserEntity } from '../user/user.entity';
@@ -26,6 +32,7 @@ export class AuthController {
   constructor(
     private userService: UserService,
     private authService: AuthService,
+    private configService: ApiConfigService, // Injected ApiConfigService
   ) {}
 
   @Post('login')
@@ -36,15 +43,29 @@ export class AuthController {
   })
   async userLogin(
     @Body() userLoginDto: UserLoginDto,
+    @Res({ passthrough: true }) res: Response, // Added Response object
   ): Promise<LoginPayloadDto> {
     const userEntity = await this.authService.validateUser(userLoginDto);
 
-    const token = await this.authService.createAccessToken({
+    const accessTokenPayload = await this.authService.createAccessToken({
       userId: userEntity.id,
       roles: userEntity.roles,
     });
 
-    return new LoginPayloadDto(userEntity.toDto(), token);
+    const refreshTokenPayload = await this.authService.createRefreshToken({
+      userId: userEntity.id,
+    });
+
+    // Set refresh token in cookie
+    res.cookie('refreshToken', refreshTokenPayload.accessToken, {
+      httpOnly: true,
+      secure: this.configService.nodeEnv === 'production',
+      samesite: 'strict',
+      path: '/',
+      maxAge: refreshTokenPayload.expiresIn * 1000, // Convert seconds to milliseconds
+    });
+
+    return new LoginPayloadDto(userEntity.toDto(), accessTokenPayload);
   }
 
   @Post('register')
@@ -72,5 +93,24 @@ export class AuthController {
   @ApiOkResponse({ type: UserDto, description: 'current user info' })
   getCurrentUser(@AuthUser() user: UserEntity): UserDto {
     return user.toDto();
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @Auth()
+  @ApiOkResponse({ description: 'Successfully logged out' })
+  async userLogout(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ message: string }> {
+    // TODO: Invalidate refresh token in database (e.g., remove the stored hash)
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: this.configService.nodeEnv === 'production',
+      samesite: 'strict',
+      path: '/',
+    });
+
+    return { message: 'Logged out successfully' };
   }
 }
