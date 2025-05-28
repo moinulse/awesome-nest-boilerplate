@@ -47,7 +47,12 @@ export function IsTmpKey(
       options: validationOptions,
       validator: {
         validate(value: string): boolean {
-          return isString(value) && /^tmp\//.test(value);
+          return (
+            isString(value) &&
+            /^tmp\/[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(value) &&
+            !value.includes('../') &&
+            !value.includes('..\\')
+          );
         },
         defaultMessage(): string {
           return 'error.invalidTmpKey';
