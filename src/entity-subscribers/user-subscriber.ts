@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto';
+
 import {
   type EntitySubscriberInterface,
   EventSubscriber,
@@ -21,11 +23,21 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
   }
 
   beforeUpdate(event: UpdateEvent<UserEntity>): void {
-    // FIXME check event.databaseEntity.password
     const entity = event.entity as UserEntity;
 
-    if (entity.password !== event.databaseEntity.password) {
-      entity.password = generateHash(entity.password!);
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (entity.password && event.databaseEntity?.password) {
+      const currentHash = Buffer.from(event.databaseEntity.password, 'utf8');
+      const newHash = Buffer.from(entity.password, 'utf8');
+
+      if (
+        currentHash.length !== newHash.length ||
+        !timingSafeEqual(currentHash, newHash)
+      ) {
+        entity.password = generateHash(entity.password);
+      }
+    } else if (entity.password) {
+      entity.password = generateHash(entity.password);
     }
   }
 }

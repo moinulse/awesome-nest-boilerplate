@@ -11,12 +11,15 @@
     "start:dev": "ts-node src/main.ts",
     "start:prod": "node dist/main.js",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "typeorm-extension": "ts-node -r tsconfig-paths/register ./node_modules/typeorm-extension/bin/cli.cjs",
     "migration:generate": "yarn run typeorm --dataSource=src/data-source.ts migration:generate",
     "migration:create": "yarn run typeorm migration:create",
     "migration:run": "yarn run typeorm --dataSource=src/data-source.ts migration:run",
     "new": "hygen new",
     "migration:revert": "yarn run typeorm --dataSource=src/data-source.ts migration:revert",
     "schema:drop": "yarn run typeorm --dataSource=src/data-source.ts schema:drop",
+    "seed:run": "yarn typeorm-extension seed:run",
+    "seed:create": "yarn typeorm-extension seed:create",
     "watch:dev": "ts-node-dev src/main.ts",
     "debug:dev": "cross-env TS_NODE_CACHE=false ts-node-dev --inspect --ignore '/^src/.*\\.spec\\.ts$/' src/main.ts",
     "lint": "eslint .",
@@ -68,8 +71,35 @@
     "swagger-ui-express": "^5.0.1",
     "tslib": "^2.8.1",
     "typeorm": "^0.3.24",
+    "typeorm-extension": "^3.7.1",
     "typeorm-transactional": "~0.5.0",
     "uuid": "^9.0.1"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".spec.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "experimentalDecorators": true,
+          "emitDecoratorMetadata": true
+        }
+      ]
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "<rootDir>/boilerplate.polyfill.ts"
+    ]
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -118,20 +148,6 @@
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3",
     "vue": "^3.5.14"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".spec.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   },
   "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }
