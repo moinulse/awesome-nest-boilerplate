@@ -17,9 +17,11 @@ export class RoleEntity extends AbstractEntity<RoleDto> {
   description?: string;
 
   @ManyToMany(() => UserEntity, (user) => user.roles)
-  users!: UserEntity[];
+  users?: UserEntity[];
 
-  @ManyToMany(() => PermissionEntity, (permission) => permission.roles)
+  @ManyToMany(() => PermissionEntity, (permission) => permission.roles, {
+    eager: true,
+  })
   @JoinTable({
     name: 'role_permissions',
     joinColumn: { name: 'role_id', referencedColumnName: 'id' },
