@@ -1,20 +1,23 @@
-import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
+import { applyDecorators, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
+import type { Permission } from '../constants/permissions.enum';
 import { AuthGuard } from '../guards/auth.guard';
-import { RolesGuard } from '../guards/roles.guard';
+import { PermissionsGuard } from '../guards/permissions.guard';
+import { Permissions } from './permissions.decorator';
+import { PublicRoute } from './public-route.decorator';
 
-// Accept role names as strings
 export function Auth(
-  roles: string[] = [], // Change RoleType[] to string[]
+  permissions: Permission[] = [],
   options?: Partial<{ public: boolean }>,
 ): MethodDecorator {
   const isPublicRoute = options?.public;
 
   return applyDecorators(
-    SetMetadata('roles', roles), // Store role names (strings)
-    UseGuards(AuthGuard({ public: isPublicRoute }), RolesGuard), // Use appropriate guards
+    Permissions(permissions),
+    UseGuards(AuthGuard({ public: isPublicRoute }), PermissionsGuard),
     ApiBearerAuth(),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),
+    PublicRoute(isPublicRoute),
   );
 }

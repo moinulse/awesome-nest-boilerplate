@@ -3,6 +3,7 @@ import 'reflect-metadata';
 
 import * as dotenv from 'dotenv';
 import { DataSource, type DataSourceOptions } from 'typeorm';
+import type { SeederOptions } from 'typeorm-extension';
 
 import { UserSubscriber } from './entity-subscribers/user-subscriber';
 import { SnakeNamingStrategy } from './snake-naming.strategy';
@@ -10,7 +11,7 @@ import { SnakeNamingStrategy } from './snake-naming.strategy';
 // Load environment variables from .env file
 dotenv.config();
 
-export const dataSourceOptions: DataSourceOptions = {
+export const dataSourceOptions: DataSourceOptions & SeederOptions = {
   type: 'postgres',
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
@@ -24,8 +25,10 @@ export const dataSourceOptions: DataSourceOptions = {
     'src/modules/**/*.view-entity{.ts,.js}',
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
+  seeds: ['src/database/seeds/*{.ts,.js}'],
+  factories: ['src/database/factories/*{.ts,.js}'],
   // ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
   logging: process.env.ENABLE_ORM_LOGS === 'true',
-} as DataSourceOptions;
+};
 
 export const appDataSource = new DataSource(dataSourceOptions);

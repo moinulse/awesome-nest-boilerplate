@@ -3,32 +3,28 @@ import {
   Param,
   ParseUUIDPipe,
   type PipeTransform,
-  SetMetadata,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { type Type } from '@nestjs/common/interfaces';
 import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
+import type { Permission } from '../constants/permissions.enum';
 import { AuthGuard } from '../guards/auth.guard';
-import { RBACGuard } from '../guards/rbac.guard';
+import { PermissionsGuard } from '../guards/permissions.guard';
 import { AuthUserInterceptor } from '../interceptors/auth-user-interceptor.service';
+import { Permissions } from './permissions.decorator';
 import { PublicRoute } from './public-route.decorator';
 
-export const PERMISSIONS_KEY = 'permissions';
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const Permissions = (...permissions: string[]) =>
-  SetMetadata(PERMISSIONS_KEY, permissions);
-
 export function Auth(
-  permissions: string[] = [],
+  permissions: Permission[] = [],
   options?: Partial<{ public: boolean }>,
 ): MethodDecorator {
   const isPublicRoute = options?.public;
 
   return applyDecorators(
-    Permissions(...permissions),
-    UseGuards(AuthGuard({ public: isPublicRoute }), RBACGuard),
+    Permissions(permissions),
+    UseGuards(AuthGuard({ public: isPublicRoute }), PermissionsGuard),
     ApiBearerAuth(),
     UseInterceptors(AuthUserInterceptor),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),

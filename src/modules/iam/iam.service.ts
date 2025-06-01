@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
+import { UserEntity } from '../user/user.entity';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -141,17 +142,25 @@ export class IAMService {
    * @returns A promise resolving to an array of unique permission names.
    */
   async getPermissionsForUser(userId: Uuid): Promise<string[]> {
-    const userWithRolesAndPermissions = await this.roleRepository.manager
-      .getRepository(RoleEntity)
-      .createQueryBuilder('role')
-      .innerJoin('role.users', 'user', 'user.id = :userId', { userId })
-      .leftJoinAndSelect('role.permissions', 'permission')
-      .getMany();
+    const user = await this.roleRepository.manager
+      .getRepository(UserEntity)
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'role')
+      .leftJoinAndSelect('role.permissions', 'rolePermission')
+      .leftJoinAndSelect('user.directPermissions', 'directPermission')
+      .where('user.id = :userId', { userId })
+      .getOne();
 
-    const permissionNames = userWithRolesAndPermissions.flatMap((role) =>
+    if (!user) {
+      return [];
+    }
+
+    const rolePermissions = user.roles.flatMap((role) =>
       role.permissions.map((p) => p.name),
     );
 
-    return [...new Set(permissionNames)];
+    const directPermissions = user.directPermissions?.map((p) => p.name) || [];
+
+    return [...new Set([...rolePermissions, ...directPermissions])];
   }
 }

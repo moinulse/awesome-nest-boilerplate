@@ -11,6 +11,7 @@ import { IFile } from '../../interfaces';
 import { AwsS3Service } from '../../shared/services/aws-s3.service';
 import { ValidatorService } from '../../shared/services/validator.service';
 import { UserRegisterDto } from '../auth/dto/user-register.dto';
+import { IAMService } from '../iam/iam.service';
 import { CreateSettingsCommand } from './commands/create-settings.command';
 import { CreateSettingsDto } from './dtos/create-settings.dto';
 import { type UserDto } from './dtos/user.dto';
@@ -26,6 +27,7 @@ export class UserService {
     private validatorService: ValidatorService,
     private awsS3Service: AwsS3Service,
     private commandBus: CommandBus,
+    private iamService: IAMService,
   ) {}
 
   /**
@@ -72,6 +74,12 @@ export class UserService {
       user.avatar = await this.awsS3Service.uploadImage(file);
     }
 
+    const role = await this.iamService.findRoleByName('user');
+
+    if (role) {
+      user.roles = [role];
+    }
+
     await this.userRepository.save(user);
 
     user.settings = await this.createSettings(
@@ -98,6 +106,7 @@ export class UserService {
     const queryBuilder = this.userRepository.createQueryBuilder('user');
 
     queryBuilder.where('user.id = :userId', { userId });
+    queryBuilder.leftJoinAndSelect('user.roles', 'roles');
 
     const userEntity = await queryBuilder.getOne();
 

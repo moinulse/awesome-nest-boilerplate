@@ -7,6 +7,7 @@ import {
   EmailFieldOptional,
   StringFieldOptional,
 } from '../../../decorators';
+import { type AuthenticatedUser } from '../../../types/auth-user.type';
 import { RoleDto } from '../../iam/dto/role.dto';
 import { type UserEntity } from '../user.entity';
 
@@ -25,7 +26,14 @@ export class UserDto extends AbstractDto {
 
   @ApiProperty({ type: () => RoleDto, isArray: true, nullable: true })
   @Type(() => RoleDto)
-  roles?: RoleDto[] | null;
+  roles!: RoleDto[];
+
+  @ApiProperty({
+    type: [String],
+    description: 'Array of user permissions (from roles + direct permissions)',
+    example: ['user:read', 'profile:update', 'auth:refresh'],
+  })
+  computedPermissions!: string[];
 
   @EmailFieldOptional({ nullable: true })
   email?: string | null;
@@ -36,7 +44,7 @@ export class UserDto extends AbstractDto {
   @BooleanFieldOptional()
   isActive?: boolean;
 
-  constructor(user: UserEntity, options?: UserDtoOptions) {
+  constructor(user: UserEntity | AuthenticatedUser, options?: UserDtoOptions) {
     super(user);
     this.firstName = user.firstName;
     this.lastName = user.lastName;
@@ -44,5 +52,9 @@ export class UserDto extends AbstractDto {
     this.email = user.email;
     this.avatar = user.avatar;
     this.isActive = options?.isActive;
+
+    this.computedPermissions =
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      (user as AuthenticatedUser).computedPermissions || [];
   }
 }

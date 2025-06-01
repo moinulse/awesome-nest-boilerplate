@@ -12,8 +12,8 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { ApiFile, Auth, AuthUser } from '../../decorators';
 import { type IFile } from '../../interfaces';
+import { type AuthenticatedUser } from '../../types/auth-user.type';
 import { UserDto } from '../user/dtos/user.dto';
-import { UserEntity } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 import { LoginPayloadDto } from './dto/login-payload.dto';
@@ -68,9 +68,12 @@ export class AuthController {
   @Version('1')
   @Get('me')
   @HttpCode(HttpStatus.OK)
-  @Auth(['read:profile:own'])
-  @ApiOkResponse({ type: UserDto, description: 'current user info' })
-  getCurrentUser(@AuthUser() user: UserEntity): UserDto {
+  @Auth()
+  @ApiOkResponse({
+    type: UserDto,
+    description: 'Current user info with computed permissions',
+  })
+  getCurrentUser(@AuthUser() user: AuthenticatedUser): UserDto {
     return user.toDto();
   }
 }

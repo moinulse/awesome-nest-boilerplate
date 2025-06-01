@@ -5,7 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { TokenType } from '../../constants';
 import { ApiConfigService } from '../../shared/services/api-config.service';
 import { type Uuid } from '../../types';
-import { type UserEntity } from '../user/user.entity';
+import { type AuthenticatedUser } from '../../types/auth-user.type';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -24,14 +24,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     userId: Uuid;
     roles: string[];
     type: TokenType;
-  }): Promise<UserEntity> {
+  }): Promise<AuthenticatedUser> {
     if (payload.type !== TokenType.ACCESS_TOKEN) {
       throw new UnauthorizedException('Invalid token type');
     }
 
+    // Load user with all permissions data for computation
     const user = await this.userService.findOne({
       where: { id: payload.userId },
-      relations: ['roles'],
+      relations: ['roles', 'roles.permissions', 'directPermissions'],
     });
 
     if (!user) {
@@ -46,6 +47,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User roles do not match token roles');
     }
 
-    return user;
+    // Compute all permissions (from roles + direct permissions)
+    const rolePermissions = user.roles.flatMap((role) =>
+      role.permissions.map((p) => p.name),
+    );
+
+    const directPermissions = user.directPermissions?.map((p) => p.name) || [];
+
+    // Combine and deduplicate permissions
+    const allPermissions = [
+      ...new Set([...rolePermissions, ...directPermissions]),
+    ];
+
+    // Attach computed permissions to user object
+    (user as AuthenticatedUser).computedPermissions = allPermissions;
+
+    return user as AuthenticatedUser;
   }
 }

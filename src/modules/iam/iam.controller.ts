@@ -25,7 +25,7 @@ export class IAMController {
   constructor(private readonly iamService: IAMService) {}
 
   @Post('roles')
-  @Auth([Permission.CreateRole])
+  @Auth([Permission.ROLE_MANAGE])
   @HttpCode(HttpStatus.CREATED)
   @ApiOkResponse({ type: RoleDto, description: 'Successfully created role' })
   async createRole(@Body() createRoleDto: CreateRoleDto): Promise<RoleDto> {
@@ -35,7 +35,7 @@ export class IAMController {
   }
 
   @Get('roles')
-  @Auth([Permission.ReadRole])
+  @Auth([Permission.ROLE_LIST])
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: [RoleDto], description: 'List of roles' })
   async findAllRoles(): Promise<RoleDto[]> {
@@ -45,7 +45,7 @@ export class IAMController {
   }
 
   @Get('roles/:id')
-  @Auth([Permission.ReadRole])
+  @Auth([Permission.ROLE_READ])
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: RoleDto, description: 'Role details' })
   async findRoleById(@UUIDParam('id') id: string): Promise<RoleDto> {
@@ -55,7 +55,7 @@ export class IAMController {
   }
 
   @Patch('roles/:id')
-  @Auth([Permission.UpdateRole])
+  @Auth([Permission.ROLE_MANAGE])
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: RoleDto, description: 'Successfully updated role' })
   async updateRole(
@@ -68,7 +68,7 @@ export class IAMController {
   }
 
   @Delete('roles/:id')
-  @Auth([Permission.DeleteRole])
+  @Auth([Permission.ROLE_MANAGE])
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOkResponse({ description: 'Successfully deleted role' })
   async deleteRole(@UUIDParam('id') id: string): Promise<void> {
@@ -76,7 +76,7 @@ export class IAMController {
   }
 
   @Post('permissions')
-  @Auth([Permission.CreatePermission])
+  @Auth([Permission.PERMISSION_MANAGE])
   @HttpCode(HttpStatus.CREATED)
   @ApiOkResponse({
     type: PermissionDto,
@@ -92,7 +92,7 @@ export class IAMController {
   }
 
   @Get('permissions')
-  @Auth([Permission.ReadPermission])
+  @Auth([Permission.PERMISSION_LIST])
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: [PermissionDto], description: 'List of permissions' })
   async findAllPermissions(): Promise<PermissionDto[]> {
