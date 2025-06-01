@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 import { AbstractDto } from '../../../common/dto/abstract.dto';
+import { Permission } from '../../../constants/permissions.enum';
 import {
   BooleanFieldOptional,
   EmailFieldOptional,
@@ -24,16 +25,20 @@ export class UserDto extends AbstractDto {
   @StringFieldOptional({ nullable: true })
   username!: string;
 
-  @ApiProperty({ type: () => RoleDto, isArray: true, nullable: true })
+  @ApiProperty({ type: () => RoleDto, isArray: true })
   @Type(() => RoleDto)
-  roles!: RoleDto[];
+  roles: RoleDto[] = [];
 
   @ApiProperty({
     type: [String],
     description: 'Array of user permissions (from roles + direct permissions)',
-    example: ['user:read', 'profile:update', 'auth:refresh'],
+    example: [
+      Permission.USER_READ,
+      Permission.PROFILE_UPDATE,
+      Permission.AUTH_REFRESH,
+    ],
   })
-  computedPermissions!: string[];
+  computedPermissions: Array<Permission | string> = [];
 
   @EmailFieldOptional({ nullable: true })
   email?: string | null;
@@ -52,9 +57,6 @@ export class UserDto extends AbstractDto {
     this.email = user.email;
     this.avatar = user.avatar;
     this.isActive = options?.isActive;
-
-    this.computedPermissions =
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      (user as AuthenticatedUser).computedPermissions || [];
+    this.computedPermissions = (user as AuthenticatedUser).computedPermissions;
   }
 }

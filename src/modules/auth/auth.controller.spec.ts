@@ -12,7 +12,7 @@ import { UserService } from '../user/user.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LoginPayloadDto } from './dto/login-payload.dto';
-import { type TokenPayloadDto } from './dto/token-payload.dto';
+import { TokenPayloadDto } from './dto/token-payload.dto';
 import { type UserLoginDto } from './dto/user-login.dto';
 import { type UserRegisterDto } from './dto/user-register.dto';
 
@@ -67,10 +67,10 @@ describe('AuthController', () => {
     }),
   };
 
-  const mockTokenPayload: TokenPayloadDto = {
+  const mockTokenPayload = new TokenPayloadDto({
     accessToken: 'mock-jwt-token',
     expiresIn: 3600,
-  };
+  });
 
   const mockAuthService = {
     validateUser: jest.fn(),
