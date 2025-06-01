@@ -24,8 +24,12 @@ export class ApiConfigService {
     return this.nodeEnv === 'test';
   }
 
-  private getNumber(key: string): number {
-    const value = this.get(key);
+  private getNumber(key: string, optional = false): number {
+    const value = optional ? this.getOptional(key) : this.get(key);
+
+    if (!value && optional) {
+      return 0;
+    }
 
     try {
       return Number(value);
@@ -55,10 +59,14 @@ export class ApiConfigService {
     }
   }
 
-  private getString(key: string): string {
-    const value = this.get(key);
+  private getString(key: string, optional = false): string {
+    const value = optional ? this.getOptional(key) : this.get(key);
 
-    return value.replaceAll('\\n', '\n');
+    if (!value && optional) {
+      return '';
+    }
+
+    return value!.replaceAll('\\n', '\n');
   }
 
   get nodeEnv(): string {
@@ -134,6 +142,24 @@ export class ApiConfigService {
     };
   }
 
+  get redisConfig() {
+    return {
+      host: this.getString('REDIS_HOST'),
+      port: this.getNumber('REDIS_PORT'),
+      password: this.getString('REDIS_PASSWORD', true), // Optional password
+      db: this.getNumber('REDIS_DB', true) || 0, // Default to DB 0
+    };
+  }
+
+  get cacheConfig() {
+    return {
+      defaultTtl: this.getNumber('CACHE_DEFAULT_TTL', true) || 300, // 5 minutes default
+      maxItems: this.getNumber('CACHE_MAX_ITEMS', true) || 1000,
+      userPermissionsTtl:
+        this.getNumber('CACHE_USER_PERMISSIONS_TTL', true) || 300,
+    };
+  }
+
   get appConfig() {
     return {
       port: this.getString('PORT'),
@@ -148,5 +174,9 @@ export class ApiConfigService {
     }
 
     return value;
+  }
+
+  private getOptional(key: string): string | undefined {
+    return this.configService.get<string>(key);
   }
 }

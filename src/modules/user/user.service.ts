@@ -97,6 +97,16 @@ export class UserService {
     pageOptionsDto: UsersPageOptionsDto,
   ): Promise<PageDto<UserDto>> {
     const queryBuilder = this.userRepository.createQueryBuilder('user');
+    queryBuilder.select([
+      'user.id',
+      'user.firstName',
+      'user.lastName',
+      'user.email',
+      'user.createdAt',
+    ]);
+    queryBuilder.leftJoin('user.roles', 'roles');
+    queryBuilder.addSelect(['roles.id', 'roles.name']);
+
     const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
 
     return items.toPageDto(pageMetaDto);

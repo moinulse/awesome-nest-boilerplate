@@ -6,6 +6,7 @@ import { TokenType } from '../../constants';
 import { ApiConfigService } from '../../shared/services/api-config.service';
 import { type Uuid } from '../../types';
 import { type AuthenticatedUser } from '../../types/auth-user.type';
+import { CacheService } from '../cache/cache.service';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ApiConfigService,
     private userService: UserService,
+    private cacheService: CacheService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -22,29 +24,46 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: {
     userId: Uuid;
-    roles: string[];
     type: TokenType;
   }): Promise<AuthenticatedUser> {
     if (payload.type !== TokenType.ACCESS_TOKEN) {
       throw new UnauthorizedException('Invalid token type');
     }
 
-    // Load user with all permissions data for computation
+    const userCacheKey = this.cacheService.getUserKey(payload.userId);
+
+    const cachedUser =
+      await this.cacheService.get<AuthenticatedUser>(userCacheKey);
+
+    if (cachedUser) {
+      return cachedUser;
+    }
+
     const user = await this.userService.findOne({
       where: { id: payload.userId },
       relations: ['roles', 'roles.permissions', 'directPermissions'],
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        roles: {
+          id: true,
+          name: true,
+          permissions: {
+            id: true,
+            name: true,
+          },
+        },
+        directPermissions: {
+          id: true,
+          name: true,
+        },
+      },
     });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
-    }
-
-    const hasValidRoles = payload.roles.every((role) =>
-      user.roles.some((userRole) => userRole.name === role),
-    );
-
-    if (!hasValidRoles) {
-      throw new UnauthorizedException('User roles do not match token roles');
     }
 
     // Compute all permissions (from roles + direct permissions)
@@ -60,8 +79,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     ];
 
     // Attach computed permissions to user object
-    (user as AuthenticatedUser).computedPermissions = allPermissions;
+    const authenticatedUser = user as AuthenticatedUser;
+    authenticatedUser.computedPermissions = allPermissions;
 
-    return user as AuthenticatedUser;
+    // Cache the user with computed permissions
+    await this.cacheService.set(userCacheKey, authenticatedUser);
+
+    return authenticatedUser;
   }
 }
