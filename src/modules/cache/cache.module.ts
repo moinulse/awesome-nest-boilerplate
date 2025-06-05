@@ -11,18 +11,20 @@ import { CacheService } from './cache.service';
     CacheManagerModule.registerAsync({
       isGlobal: true,
       inject: [ApiConfigService],
-      useFactory: (configService: ApiConfigService) => {
+      useFactory: async (configService: ApiConfigService) => {
         // Build Redis URL from config
         const { host, port, password, db } = configService.redisConfig;
         const authPart = password ? `:${password}@` : '';
         const redisUrl = `redis://${authPart}${host}:${port}/${db}`;
 
         // Create Keyv instance with Redis backend
-        return createKeyv(redisUrl, {
-          namespace: 'app',
-          useUnlink: true, // Use UNLINK for better performance
-          clearBatchSize: 1000,
-        });
+        return {
+          store: createKeyv(redisUrl, {
+            namespace: 'app',
+            useUnlink: true, // Use UNLINK for better performance
+            clearBatchSize: 1000,
+          }),
+        };
       },
     }),
   ],
