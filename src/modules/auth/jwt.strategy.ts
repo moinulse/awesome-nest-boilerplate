@@ -1,16 +1,19 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import { plainToInstance } from 'class-transformer';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { TokenType } from '../../constants';
 import { ApiConfigService } from '../../shared/services/api-config.service';
 import { type Uuid } from '../../types';
-import { type AuthenticatedUser } from '../../types/auth-user.type';
 import { CacheService } from '../cache/cache.service';
+import { UserEntity } from '../user/user.entity';
 import { UserService } from '../user/user.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  private readonly logger = new Logger(JwtStrategy.name);
+
   constructor(
     configService: ApiConfigService,
     private userService: UserService,
@@ -25,18 +28,31 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: {
     userId: Uuid;
     type: TokenType;
-  }): Promise<AuthenticatedUser> {
+  }): Promise<UserEntity> {
     if (payload.type !== TokenType.ACCESS_TOKEN) {
       throw new UnauthorizedException('Invalid token type');
     }
 
     const userCacheKey = this.cacheService.getUserKey(payload.userId);
 
-    const cachedUser =
-      await this.cacheService.get<AuthenticatedUser>(userCacheKey);
+    try {
+      const cachedJsonUser = await this.cacheService.get(userCacheKey);
 
-    if (cachedUser) {
-      return cachedUser;
+      if (cachedJsonUser) {
+        try {
+          const plainUser = JSON.parse(cachedJsonUser);
+
+          return plainToInstance(UserEntity, plainUser);
+        } catch (e) {
+          this.logger.error(
+            `Error deserializing cached user ${payload.userId}: ${e}. Proceeding to DB lookup.`,
+          );
+        }
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error fetching user ${payload.userId} from cache: ${error}. Proceeding to DB lookup.`,
+      );
     }
 
     const user = await this.userService.findOne({
@@ -66,25 +82,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User not found');
     }
 
-    // Compute all permissions (from roles + direct permissions)
-    const rolePermissions = user.roles.flatMap((role) =>
-      role.permissions.map((p) => p.name),
-    );
+    try {
+      await this.cacheService.insert(userCacheKey, JSON.stringify(user));
+    } catch (cacheError) {
+      this.logger.error(
+        `Failed to cache user ${payload.userId}: ${cacheError}`,
+      );
+    }
 
-    const directPermissions = user.directPermissions?.map((p) => p.name) || [];
-
-    // Combine and deduplicate permissions
-    const allPermissions = [
-      ...new Set([...rolePermissions, ...directPermissions]),
-    ];
-
-    // Attach computed permissions to user object
-    const authenticatedUser = user as AuthenticatedUser;
-    authenticatedUser.computedPermissions = allPermissions;
-
-    // Cache the user with computed permissions
-    await this.cacheService.set(userCacheKey, authenticatedUser);
-
-    return authenticatedUser;
+    return user;
   }
 }

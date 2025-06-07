@@ -1,96 +1,43 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Cache } from 'cache-manager';
+import Redis from 'ioredis';
 
-import { ApiConfigService } from '../../shared/services/api-config.service';
-
-export interface ICacheKeyOptions {
-  ttl?: number;
-}
-
-export interface IPatternDeleteResult {
-  deletedCount: number;
-  errors: Error[];
-}
+import { IO_REDIS_KEY } from './redis.constants';
 
 @Injectable()
 export class CacheService {
   private readonly logger = new Logger(CacheService.name);
 
   constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private configService: ApiConfigService,
+    @Inject(IO_REDIS_KEY)
+    private readonly redisClient: Redis,
   ) {}
 
-  async get<T>(key: string): Promise<T | undefined> {
-    try {
-      const result = await this.cacheManager.get<T>(key);
-      this.logger.debug(`Cache GET: ${key} - ${result ? 'HIT' : 'MISS'}`);
+  async getKeys(pattern?: string): Promise<string[]> {
+    this.logger.debug(`Getting keys with pattern: ${pattern ?? '*'}`);
 
-      return result === null ? undefined : result;
-    } catch (error) {
-      this.logger.error(`Cache get error for key ${key}:`, error);
-
-      return undefined;
-    }
+    return this.redisClient.keys(pattern ?? '*');
   }
 
-  async set<T>(key: string, value: T, ttl?: number): Promise<void> {
-    try {
-      const effectiveTtl = ttl ?? this.configService.cacheConfig.defaultTtl;
-      await this.cacheManager.set(key, value, effectiveTtl);
-      this.logger.debug(`Cache SET: ${key} with TTL ${effectiveTtl}s`);
-    } catch (error) {
-      this.logger.error(`Cache set error for key ${key}:`, error);
-    }
+  async insert(key: string, value: string | number): Promise<void> {
+    this.logger.debug(`Inserting key: ${key} with value: ${value}`);
+
+    await this.redisClient.set(key, value);
   }
 
-  async del(key: string): Promise<void> {
-    try {
-      await this.cacheManager.del(key);
-      this.logger.debug(`Cache DEL: ${key}`);
-    } catch (error) {
-      this.logger.error(`Cache delete error for key ${key}:`, error);
-    }
+  async get(key: string): Promise<string | null> {
+    this.logger.debug(`Getting key: ${key}`);
+
+    return this.redisClient.get(key);
   }
 
-  async exists(key: string): Promise<boolean> {
-    try {
-      const value = await this.cacheManager.get(key);
-
-      return value !== undefined;
-    } catch (error) {
-      this.logger.error(`Cache exists check error for key ${key}:`, error);
-
-      return false;
-    }
+  async delete(key: string): Promise<void> {
+    await this.redisClient.del(key);
   }
 
-  async mget<T>(keys: string[]): Promise<Array<T | undefined>> {
-    const results = await Promise.allSettled(
-      keys.map((key) => this.get<T>(key)),
-    );
+  async validate(key: string, value: string): Promise<boolean> {
+    const storedValue = await this.redisClient.get(key);
 
-    return results.map((result) =>
-      result.status === 'fulfilled' ? result.value : undefined,
-    );
-  }
-
-  async mset<T>(
-    keyValuePairs: Array<{ key: string; value: T; ttl?: number }>,
-  ): Promise<void> {
-    await Promise.allSettled(
-      keyValuePairs.map(({ key, value, ttl }) => this.set(key, value, ttl)),
-    );
-  }
-
-  async clear(): Promise<void> {
-    try {
-      await this.cacheManager.clear();
-      this.logger.debug('Cache cleared');
-    } catch (error) {
-      this.logger.error('Cache clear error:', error);
-    }
+    return storedValue === value;
   }
 
   getUserPermissionsKey(userId: Uuid): string {

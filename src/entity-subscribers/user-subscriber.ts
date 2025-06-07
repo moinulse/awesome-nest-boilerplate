@@ -40,4 +40,20 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
       entity.password = generateHash(entity.password);
     }
   }
+
+  afterLoad(entity: UserEntity): void {
+    if (entity.directPermissions) {
+      const rolePermissions = entity.roles.flatMap((role) =>
+        role.permissions.map((p) => p.name),
+      );
+
+      const directPermissions =
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        entity.directPermissions?.map((p) => p.name) || [];
+
+      entity.computedPermissions = [
+        ...new Set([...rolePermissions, ...directPermissions]),
+      ];
+    }
+  }
 }

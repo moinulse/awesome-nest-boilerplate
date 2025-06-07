@@ -1,3 +1,4 @@
+import { Expose, Type } from 'class-transformer';
 import {
   Column,
   Entity,
@@ -23,6 +24,7 @@ export class UserEntity extends AbstractEntity<UserDto, UserDtoOptions> {
   @Column({ nullable: true, type: 'varchar' })
   lastName!: string | null;
 
+  @Type(() => RoleEntity)
   @ManyToMany(() => RoleEntity, (role) => role.users)
   @JoinTable({
     name: 'user_roles',
@@ -31,6 +33,7 @@ export class UserEntity extends AbstractEntity<UserDto, UserDtoOptions> {
   })
   roles!: RoleEntity[];
 
+  @Type(() => PermissionEntity)
   @ManyToMany(() => PermissionEntity, (permission) => permission.users)
   @JoinTable({
     name: 'user_permissions',
@@ -59,4 +62,7 @@ export class UserEntity extends AbstractEntity<UserDto, UserDtoOptions> {
 
   @OneToOne(() => UserSettingsEntity, (userSettings) => userSettings.user)
   settings?: UserSettingsEntity;
+
+  @Expose()
+  computedPermissions?: string[];
 }
