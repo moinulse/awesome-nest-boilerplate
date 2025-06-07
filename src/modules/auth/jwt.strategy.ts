@@ -92,7 +92,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     try {
-      await this.cacheService.insert(userCacheKey, JSON.stringify(user));
+      await this.cacheService.insert(userCacheKey, JSON.stringify(user), 300);
     } catch (cacheError) {
       this.logger.error(
         `Failed to cache user ${payload.userId}: ${cacheError}`,

@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 
+import { ApiConfigService } from '../../shared/services/api-config.service';
 import { IO_REDIS_KEY } from './redis.constants';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class CacheService {
   constructor(
     @Inject(IO_REDIS_KEY)
     private readonly redisClient: Redis,
+    private readonly configService: ApiConfigService,
   ) {}
 
   async getKeys(pattern?: string): Promise<string[]> {
@@ -37,10 +39,18 @@ export class CacheService {
     });
   }
 
-  async insert(key: string, value: string | number): Promise<void> {
+  async insert(
+    key: string,
+    value: string | number,
+    ttl?: number,
+  ): Promise<void> {
     this.logger.debug(`Inserting key: ${key} with value: ${value}`);
 
-    await this.redisClient.set(key, value);
+    if (ttl) {
+      await this.redisClient.set(key, value, 'EX', ttl);
+    } else {
+      await this.redisClient.set(key, value);
+    }
   }
 
   async get(key: string): Promise<string | null> {
@@ -68,7 +78,7 @@ export class CacheService {
   }
 
   getRefreshTokenKey(userId: Uuid, tokenId: string): string {
-    return `refresh_token:${userId}:${tokenId}`;
+    return `r_token:${userId}:${tokenId}`;
   }
 
   // Refresh token storage methods
@@ -79,7 +89,7 @@ export class CacheService {
   ): Promise<void> {
     const key = this.getRefreshTokenKey(userId, tokenId);
     const ttl = this.configService.authConfig.jwtRefreshExpirationTime;
-    await this.set(key, tokenHash, ttl);
+    await this.insert(key, tokenHash, ttl);
   }
 
   async validateRefreshToken(
@@ -88,13 +98,13 @@ export class CacheService {
     tokenHash: string,
   ): Promise<boolean> {
     const key = this.getRefreshTokenKey(userId, tokenId);
-    const storedHash = await this.get<string>(key);
+    const storedHash = await this.get(key);
 
     return storedHash === tokenHash;
   }
 
   async invalidateRefreshToken(userId: Uuid, tokenId: string): Promise<void> {
     const key = this.getRefreshTokenKey(userId, tokenId);
-    await this.del(key);
+    await this.delete(key);
   }
 }
