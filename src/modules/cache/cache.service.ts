@@ -66,4 +66,35 @@ export class CacheService {
   getUserKey(userId: Uuid): string {
     return `user:${userId}`;
   }
+
+  getRefreshTokenKey(userId: Uuid, tokenId: string): string {
+    return `refresh_token:${userId}:${tokenId}`;
+  }
+
+  // Refresh token storage methods
+  async storeRefreshToken(
+    userId: Uuid,
+    tokenId: string,
+    tokenHash: string,
+  ): Promise<void> {
+    const key = this.getRefreshTokenKey(userId, tokenId);
+    const ttl = this.configService.authConfig.jwtRefreshExpirationTime;
+    await this.set(key, tokenHash, ttl);
+  }
+
+  async validateRefreshToken(
+    userId: Uuid,
+    tokenId: string,
+    tokenHash: string,
+  ): Promise<boolean> {
+    const key = this.getRefreshTokenKey(userId, tokenId);
+    const storedHash = await this.get<string>(key);
+
+    return storedHash === tokenHash;
+  }
+
+  async invalidateRefreshToken(userId: Uuid, tokenId: string): Promise<void> {
+    const key = this.getRefreshTokenKey(userId, tokenId);
+    await this.del(key);
+  }
 }

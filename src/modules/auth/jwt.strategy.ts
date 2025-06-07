@@ -20,7 +20,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private cacheService: CacheService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (request) => {
+          if (request.cookies?.accessToken) {
+            return request.cookies.accessToken;
+          }
+
+          return null;
+        },
+      ]),
       secretOrKey: configService.authConfig.publicKey,
     });
   }
