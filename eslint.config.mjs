@@ -19,8 +19,8 @@ export default [
       'node_modules/**',
       'dist/**',
       '.vuepress/**',
-      'coverage/**'
-    ]
+      'coverage/**',
+    ],
   },
 
   // Configuration for CommonJS files
@@ -38,7 +38,15 @@ export default [
         module: 'readonly',
         require: 'readonly',
         exports: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setImmediate: 'readonly',
+        clearImmediate: 'readonly',
         args: 'readonly', // for hygen templates
+        Uuid: 'readonly',
+        describe: 'readonly',
       },
     },
   },
@@ -64,6 +72,10 @@ export default [
         module: 'readonly',
         require: 'readonly',
         exports: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        args: 'readonly', // for hygen templates
         // Custom types
         Uuid: 'readonly',
         // Jest globals
@@ -80,9 +92,9 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tseslint,
-      'prettier': prettier,
+      prettier: prettier,
       'simple-import-sort': simpleImportSort,
-      'unicorn': unicorn,
+      unicorn: unicorn,
     },
     rules: {
       // TypeScript ESLint rules
@@ -93,12 +105,15 @@ export default [
       '@typescript-eslint/no-unsafe-call': 'off',
 
       // Prettier
-      'prettier/prettier': ['error', {
-        singleQuote: true,
-        trailingComma: 'all',
-        tabWidth: 2,
-        bracketSpacing: true
-      }],
+      'prettier/prettier': [
+        'error',
+        {
+          singleQuote: true,
+          trailingComma: 'all',
+          tabWidth: 2,
+          bracketSpacing: true,
+        },
+      ],
 
       // Simple import sort
       'simple-import-sort/imports': 'error',
@@ -224,14 +239,14 @@ export default [
       ],
       'arrow-body-style': 'error',
       'arrow-parens': ['error', 'always'],
-      'complexity': 'off',
+      complexity: 'off',
       'no-restricted-imports': [
         'error',
         {
           paths: [
             {
               name: 'rxjs/Rx',
-              message: 'Please import directly from \'rxjs\' instead',
+              message: "Please import directly from 'rxjs' instead",
             },
           ],
         },
@@ -242,12 +257,12 @@ export default [
       'no-else-return': 'error',
       'no-implicit-coercion': 'error',
       'constructor-super': 'error',
-      'yoda': 'error',
-      'strict': ['error', 'never'],
-      'curly': 'error',
+      yoda: 'error',
+      strict: ['error', 'never'],
+      curly: 'error',
       'dot-notation': 'error',
       'eol-last': 'error',
-      'eqeqeq': ['error', 'smart'],
+      eqeqeq: ['error', 'smart'],
       'guard-for-in': 'error',
       'id-match': 'error',
       'max-classes-per-file': 'off',
@@ -325,7 +340,7 @@ export default [
       'prefer-const': 'error',
       'prefer-object-spread': 'error',
       'quote-props': ['error', 'consistent-as-needed'],
-      'radix': 'error',
+      radix: 'error',
       'use-isnan': 'error',
       'valid-typeof': 'off',
       'space-before-function-paren': 'off',

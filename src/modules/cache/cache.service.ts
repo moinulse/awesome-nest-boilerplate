@@ -13,9 +13,28 @@ export class CacheService {
   ) {}
 
   async getKeys(pattern?: string): Promise<string[]> {
-    this.logger.debug(`Getting keys with pattern: ${pattern ?? '*'}`);
+    this.logger.debug(`Scanning for keys with pattern: ${pattern ?? '*'}`);
+    const stream = this.redisClient.scanStream({
+      match: pattern ?? '*',
+      count: 100,
+    });
+    const keys: string[] = [];
 
-    return this.redisClient.keys(pattern ?? '*');
+    return new Promise((resolve, reject) => {
+      stream.on('data', (resultKeys: string[]) => {
+        keys.push(...resultKeys);
+      });
+      stream.on('error', (err) => {
+        this.logger.error(`Error scanning keys: ${err}`);
+        reject(err);
+      });
+      stream.on('end', () => {
+        this.logger.debug(
+          `Found ${keys.length} keys matching pattern: ${pattern ?? '*'}`,
+        );
+        resolve(keys);
+      });
+    });
   }
 
   async insert(key: string, value: string | number): Promise<void> {

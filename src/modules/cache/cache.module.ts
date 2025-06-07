@@ -29,11 +29,12 @@ export class CacheModule implements OnApplicationShutdown {
 
   async onApplicationShutdown(_signal?: string): Promise<void> {
     return new Promise<void>((resolve) => {
-      const redis = this.moduleRef.get(IO_REDIS_KEY);
-      redis.quit();
-      redis.on('end', () => {
-        resolve();
-      });
+      const redis = this.moduleRef.get<Redis>(IO_REDIS_KEY, { strict: false });
+
+      Promise.race([
+        redis.quit(),
+        new Promise((r) => setTimeout(r, 1_000)),
+      ]).finally(() => resolve());
     });
   }
 }

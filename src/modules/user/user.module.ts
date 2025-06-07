@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { UserSubscriber } from '../../entity-subscribers/user-subscriber';
 import { IAMModule } from '../iam/iam.module';
 import { CreateSettingsHandler } from './commands/create-settings.command';
 import { UserController } from './user.controller';
@@ -17,6 +18,6 @@ const handlers = [CreateSettingsHandler];
   ],
   controllers: [UserController],
   exports: [UserService],
-  providers: [UserService, ...handlers],
+  providers: [UserService, UserSubscriber, ...handlers],
 })
 export class UserModule {}
