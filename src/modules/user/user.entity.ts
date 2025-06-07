@@ -1,3 +1,4 @@
+import { Expose, Type } from 'class-transformer';
 import {
   Column,
   Entity,
@@ -9,6 +10,7 @@ import {
 
 import { AbstractEntity } from '../../common/abstract.entity';
 import { UseDto } from '../../decorators/use-dto.decorator';
+import { PermissionEntity } from '../iam/entities/permission.entity';
 import { RoleEntity } from '../iam/entities/role.entity';
 import { UserDto, type UserDtoOptions } from './dtos/user.dto';
 import { UserSettingsEntity } from './user-settings.entity';
@@ -22,13 +24,23 @@ export class UserEntity extends AbstractEntity<UserDto, UserDtoOptions> {
   @Column({ nullable: true, type: 'varchar' })
   lastName!: string | null;
 
-  @ManyToMany(() => RoleEntity, (role) => role.users, { eager: true })
+  @Type(() => RoleEntity)
+  @ManyToMany(() => RoleEntity, (role) => role.users)
   @JoinTable({
     name: 'user_roles',
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
   roles!: RoleEntity[];
+
+  @Type(() => PermissionEntity)
+  @ManyToMany(() => PermissionEntity, (permission) => permission.users)
+  @JoinTable({
+    name: 'user_permissions',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
+  })
+  directPermissions?: PermissionEntity[];
 
   @Column({ unique: true, nullable: true, type: 'varchar' })
   email!: string | null;
@@ -50,4 +62,7 @@ export class UserEntity extends AbstractEntity<UserDto, UserDtoOptions> {
 
   @OneToOne(() => UserSettingsEntity, (userSettings) => userSettings.user)
   settings?: UserSettingsEntity;
+
+  @Expose()
+  computedPermissions?: string[];
 }

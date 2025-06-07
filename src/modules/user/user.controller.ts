@@ -21,7 +21,7 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Get()
-  @Auth([Permission.ReadUser])
+  @Auth([Permission.USER_LIST])
   @HttpCode(HttpStatus.OK)
   @ApiPageOkResponse({
     description: 'Get users list',
@@ -35,7 +35,7 @@ export class UserController {
   }
 
   @Get(':id')
-  @Auth([Permission.ReadUser])
+  @Auth([Permission.USER_READ])
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
     status: HttpStatus.OK,

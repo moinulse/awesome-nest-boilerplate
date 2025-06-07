@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
@@ -11,6 +15,7 @@ import { IFile } from '../../interfaces';
 import { AwsS3Service } from '../../shared/services/aws-s3.service';
 import { ValidatorService } from '../../shared/services/validator.service';
 import { UserRegisterDto } from '../auth/dto/user-register.dto';
+import { IAMService } from '../iam/iam.service';
 import { CreateSettingsCommand } from './commands/create-settings.command';
 import { CreateSettingsDto } from './dtos/create-settings.dto';
 import { type UserDto } from './dtos/user.dto';
@@ -20,12 +25,15 @@ import { type UserSettingsEntity } from './user-settings.entity';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private validatorService: ValidatorService,
     private awsS3Service: AwsS3Service,
     private commandBus: CommandBus,
+    private iamService: IAMService,
   ) {}
 
   /**
@@ -72,6 +80,18 @@ export class UserService {
       user.avatar = await this.awsS3Service.uploadImage(file);
     }
 
+    const role = await this.iamService.findRoleByName('user');
+
+    if (!role) {
+      this.logger.error(
+        "Default 'user' role not found. Please ensure database is seeded correctly.",
+      );
+
+      throw new InternalServerErrorException("Default 'user' role not found.");
+    }
+
+    user.roles = [role];
+
     await this.userRepository.save(user);
 
     user.settings = await this.createSettings(
@@ -89,6 +109,16 @@ export class UserService {
     pageOptionsDto: UsersPageOptionsDto,
   ): Promise<PageDto<UserDto>> {
     const queryBuilder = this.userRepository.createQueryBuilder('user');
+    queryBuilder.select([
+      'user.id',
+      'user.firstName',
+      'user.lastName',
+      'user.email',
+      'user.createdAt',
+    ]);
+    queryBuilder.leftJoin('user.roles', 'roles');
+    queryBuilder.addSelect(['roles.id', 'roles.name']);
+
     const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
 
     return items.toPageDto(pageMetaDto);
@@ -98,6 +128,7 @@ export class UserService {
     const queryBuilder = this.userRepository.createQueryBuilder('user');
 
     queryBuilder.where('user.id = :userId', { userId });
+    queryBuilder.leftJoinAndSelect('user.roles', 'roles');
 
     const userEntity = await queryBuilder.getOne();
 

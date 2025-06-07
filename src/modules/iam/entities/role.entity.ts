@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm';
 
 import { AbstractEntity } from '../../../common/abstract.entity';
@@ -17,9 +18,12 @@ export class RoleEntity extends AbstractEntity<RoleDto> {
   description?: string;
 
   @ManyToMany(() => UserEntity, (user) => user.roles)
-  users!: UserEntity[];
+  users?: UserEntity[];
 
-  @ManyToMany(() => PermissionEntity, (permission) => permission.roles)
+  @Type(() => PermissionEntity)
+  @ManyToMany(() => PermissionEntity, (permission) => permission.roles, {
+    eager: true,
+  })
   @JoinTable({
     name: 'role_permissions',
     joinColumn: { name: 'role_id', referencedColumnName: 'id' },

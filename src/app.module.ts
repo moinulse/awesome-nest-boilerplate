@@ -10,6 +10,7 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
 
 import { dataSourceOptions } from './data-source';
 import { AuthModule } from './modules/auth/auth.module';
+import { CacheModule } from './modules/cache/cache.module';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module';
 import { IAMModule } from './modules/iam/iam.module';
 import { UserModule } from './modules/user/user.module';
@@ -50,6 +51,7 @@ import { SharedModule } from './shared/shared.module';
         );
       },
     }),
+    CacheModule,
     HealthCheckerModule,
   ],
   providers: [],

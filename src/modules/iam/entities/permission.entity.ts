@@ -2,6 +2,7 @@ import { Column, Entity, Index, ManyToMany } from 'typeorm';
 
 import { AbstractEntity } from '../../../common/abstract.entity';
 import { UseDto } from '../../../decorators/use-dto.decorator';
+import { UserEntity } from '../../user/user.entity';
 import { PermissionDto } from '../dto/permission.dto';
 import { RoleEntity } from './role.entity';
 
@@ -12,9 +13,15 @@ export class PermissionEntity extends AbstractEntity<PermissionDto> {
   @Index()
   name!: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ nullable: true, type: 'varchar', length: 500 })
   description?: string;
 
   @ManyToMany(() => RoleEntity, (role) => role.permissions)
-  roles!: RoleEntity[];
+  roles?: RoleEntity[];
+
+  @Column({ type: 'boolean', default: false })
+  isSystem?: boolean;
+
+  @ManyToMany(() => UserEntity, (user) => user.directPermissions)
+  users?: UserEntity[];
 }

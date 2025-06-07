@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { timingSafeEqual } from 'node:crypto';
 
 import {
@@ -8,10 +9,13 @@ import {
 } from 'typeorm';
 
 import { generateHash } from '../common/utils';
+import { CacheService } from '../modules/cache/cache.service';
 import { UserEntity } from '../modules/user/user.entity';
 
 @EventSubscriber()
 export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
+  constructor(private readonly cacheService: CacheService) {}
+
   listenTo(): typeof UserEntity {
     return UserEntity;
   }
@@ -22,10 +26,14 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
     }
   }
 
-  beforeUpdate(event: UpdateEvent<UserEntity>): void {
+  async beforeUpdate(event: UpdateEvent<UserEntity>): Promise<void> {
     const entity = event.entity as UserEntity;
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (entity.id) {
+      const cacheKey = this.cacheService.getUserKey(entity.id);
+      await this.cacheService.delete(cacheKey);
+    }
+
     if (entity.password && event.databaseEntity?.password) {
       const currentHash = Buffer.from(event.databaseEntity.password, 'utf8');
       const newHash = Buffer.from(entity.password, 'utf8');
@@ -39,5 +47,19 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
     } else if (entity.password) {
       entity.password = generateHash(entity.password);
     }
+  }
+
+  afterLoad(entity: UserEntity): void {
+    const rolePermissions =
+      entity.roles?.flatMap(
+        (role) => role.permissions?.map((p) => p.name) ?? [],
+      ) ?? [];
+
+    const directPermissions =
+      entity.directPermissions?.map((p) => p.name) ?? [];
+
+    entity.computedPermissions = [
+      ...new Set([...rolePermissions, ...directPermissions]),
+    ];
   }
 }

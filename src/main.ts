@@ -12,6 +12,7 @@ import {
   type NestExpressApplication,
 } from '@nestjs/platform-express';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { initializeTransactionalContext } from 'typeorm-transactional';
@@ -35,6 +36,7 @@ const bootstrap = async () => {
   // app.setGlobalPrefix('/api'); use api as global prefix if you don't have subdomain
   app.use(compression());
   app.use(morgan('combined'));
+  app.use(cookieParser());
   app.enableVersioning({
     defaultVersion: '1',
     type: VersioningType.URI,
