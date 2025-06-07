@@ -142,7 +142,17 @@ export class AuthService {
     return user;
   }
 
-  async logout(userId: Uuid, tokenId: string): Promise<void> {
-    await this.cacheService.invalidateRefreshToken(userId, tokenId);
+  async logout(userId: Uuid, token: string): Promise<void> {
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+
+      if (payload.type !== TokenType.REFRESH_TOKEN) {
+        throw new Error('Invalid token type');
+      }
+
+      await this.cacheService.invalidateRefreshToken(userId, payload.tokenId);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
   }
 }

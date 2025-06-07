@@ -112,13 +112,14 @@ export class CacheService {
     tokenHash: string,
   ): Promise<boolean> {
     const key = this.getRefreshTokenKey(userId, tokenId);
-    const storedHash = await this.get(key);
 
-    return storedHash === tokenHash;
+    return this.validate(key, tokenHash);
   }
 
   async invalidateRefreshToken(userId: Uuid, tokenId: string): Promise<void> {
     const key = this.getRefreshTokenKey(userId, tokenId);
+    const userKey = this.getUserKey(userId);
+    await this.delete(userKey);
     await this.delete(key);
   }
 }

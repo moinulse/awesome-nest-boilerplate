@@ -65,7 +65,7 @@ export class AuthController {
       httpOnly: true,
       secure: this.configService.isProduction,
       sameSite: 'strict',
-      maxAge: this.configService.authConfig.jwtExpirationTime,
+      maxAge: this.configService.authConfig.jwtExpirationTime * 1000,
     });
 
     return new LoginPayloadDto(userEntity.toDto(), {
@@ -85,8 +85,7 @@ export class AuthController {
   async refreshToken(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<{ accessToken: string }> {
-    // Extract refresh token from cookie or body
+  ): Promise<TokenPayloadDto> {
     const refreshToken =
       request.cookies.refreshToken || request.body?.refreshToken;
 
@@ -97,7 +96,7 @@ export class AuthController {
       httpOnly: true,
       secure: this.configService.isProduction,
       sameSite: 'strict',
-      maxAge: this.configService.authConfig.cookieMaxAge * 1000,
+      maxAge: this.configService.authConfig.cookieMaxAge,
     });
 
     // Set new access token as cookie as well
@@ -108,9 +107,7 @@ export class AuthController {
       maxAge: this.configService.authConfig.jwtExpirationTime * 1000,
     });
 
-    return {
-      accessToken: tokens.accessToken,
-    };
+    return tokens;
   }
 
   @Post('logout')

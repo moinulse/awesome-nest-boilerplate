@@ -135,13 +135,15 @@ export class ApiConfigService {
   }
 
   get authConfig() {
+    const jwtRefreshExpirationTime =
+      this.getNumber('JWT_REFRESH_EXPIRATION_TIME', true) || 604_800; // 7 days
+
     return {
       privateKey: this.getString('JWT_PRIVATE_KEY'),
       publicKey: this.getString('JWT_PUBLIC_KEY'),
-      jwtExpirationTime: this.getNumber('JWT_EXPIRATION_TIME'),
-      jwtRefreshExpirationTime:
-        this.getNumber('JWT_REFRESH_EXPIRATION_TIME', true) || 604_800, // 7 days default
-      cookieMaxAge: this.getNumber('COOKIE_MAX_AGE', true) || 604_800_000, // 7 days in milliseconds
+      jwtExpirationTime: this.getNumber('JWT_EXPIRATION_TIME') || 900, // 15 minutes
+      jwtRefreshExpirationTime,
+      cookieMaxAge: jwtRefreshExpirationTime * 1000, // 7 days in milliseconds
     };
   }
 
