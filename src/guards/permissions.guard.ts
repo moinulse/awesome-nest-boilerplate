@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import {
   type CanActivate,
   type ExecutionContext,
@@ -21,7 +22,7 @@ export class PermissionsGuard implements CanActivate {
     );
 
     // If no permissions are required, allow access
-    if (!requiredPermissions.length) {
+    if (!requiredPermissions || requiredPermissions.length === 0) {
       return true;
     }
 
@@ -32,7 +33,9 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    const userPermissions = user.computedPermissions;
+    const userPermissions = Array.isArray(user.computedPermissions)
+      ? user.computedPermissions
+      : [];
     const userPermissionSet = new Set(userPermissions);
 
     // Check if the user has all the required permissions

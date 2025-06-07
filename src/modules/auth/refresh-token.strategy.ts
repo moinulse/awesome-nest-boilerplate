@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Request } from 'express';
+import { type Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { TokenType } from '../../constants';
@@ -33,15 +33,6 @@ export class RefreshTokenStrategy extends PassportStrategy(
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static extractJWTFromCookie(request: any): string | null {
-    if (request.cookies && 'refreshToken' in request.cookies) {
-      return request.cookies.refreshToken;
-    }
-
-    return null;
-  }
-
   async validate(
     request: Request,
     payload: {
@@ -62,8 +53,12 @@ export class RefreshTokenStrategy extends PassportStrategy(
     }
 
     const refreshToken =
-      RefreshTokenStrategy.extractJWTFromCookie(request) ||
-      request.body?.refreshToken;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      request.cookies?.refreshToken || request.body?.refreshToken;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
 
     return {
       userId: payload.userId,

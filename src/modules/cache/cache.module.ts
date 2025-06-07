@@ -1,4 +1,4 @@
-import { Global, Module, OnApplicationShutdown } from '@nestjs/common';
+import { Global, Logger, Module, OnApplicationShutdown } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Redis } from 'ioredis';
 
@@ -11,13 +11,28 @@ import { IO_REDIS_KEY } from './redis.constants';
   providers: [
     {
       provide: IO_REDIS_KEY,
-      useFactory: async (configService: ApiConfigService) =>
-        new Redis({
+      useFactory: async (configService: ApiConfigService) => {
+        const logger = new Logger('RedisProvider');
+        const redis = new Redis({
           host: configService.redisConfig.host,
           port: configService.redisConfig.port,
           password: configService.redisConfig.password,
           db: configService.redisConfig.db,
-        }),
+          lazyConnect: true, // Don't connect immediately
+        });
+
+        redis.on('error', (error) => {
+          logger.error('Redis connection error:', error);
+        });
+
+        redis.connect().catch((error) => {
+          logger.error(
+            `Failed to connect to Redis during startup: ${error.message}`,
+          );
+        });
+
+        return redis;
+      },
       inject: [ApiConfigService],
     },
     CacheService,

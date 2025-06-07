@@ -85,3 +85,5 @@ db-data
 
 # Local History
 .history
+
+tsconfig.tsbuildinfo

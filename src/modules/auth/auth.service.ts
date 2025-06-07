@@ -30,11 +30,16 @@ export class AuthService {
     const roleNames = data.roles.map((role) => role.name);
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync({
-        userId: data.userId,
-        type: TokenType.ACCESS_TOKEN,
-        roles: roleNames,
-      }),
+      this.jwtService.signAsync(
+        {
+          userId: data.userId,
+          type: TokenType.ACCESS_TOKEN,
+          roles: roleNames,
+        },
+        {
+          expiresIn: this.configService.authConfig.jwtExpirationTime,
+        },
+      ),
       this.jwtService.signAsync(
         {
           userId: data.userId,

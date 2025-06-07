@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
@@ -21,6 +25,8 @@ import { type UserSettingsEntity } from './user-settings.entity';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
@@ -76,9 +82,15 @@ export class UserService {
 
     const role = await this.iamService.findRoleByName('user');
 
-    if (role) {
-      user.roles = [role];
+    if (!role) {
+      this.logger.error(
+        "Default 'user' role not found. Please ensure database is seeded correctly.",
+      );
+
+      throw new InternalServerErrorException("Default 'user' role not found.");
     }
+
+    user.roles = [role];
 
     await this.userRepository.save(user);
 

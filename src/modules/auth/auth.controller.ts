@@ -58,16 +58,14 @@ export class AuthController {
       httpOnly: true,
       secure: this.configService.isProduction,
       sameSite: 'strict',
-      maxAge: this.configService.authConfig.cookieMaxAge * 1000,
+      maxAge: this.configService.authConfig.cookieMaxAge,
     });
 
-    // Optionally set access token as cookie (for clients that prefer cookie-based access tokens)
-    // This provides flexibility - clients can use either Authorization headers or cookies
     response.cookie('accessToken', tokens.accessToken, {
       httpOnly: true,
       secure: this.configService.isProduction,
       sameSite: 'strict',
-      maxAge: this.configService.authConfig.jwtExpirationTime * 1000,
+      maxAge: this.configService.authConfig.jwtExpirationTime,
     });
 
     return new LoginPayloadDto(userEntity.toDto(), {

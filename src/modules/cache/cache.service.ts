@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto';
+
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 
@@ -66,7 +68,19 @@ export class CacheService {
   async validate(key: string, value: string): Promise<boolean> {
     const storedValue = await this.redisClient.get(key);
 
-    return storedValue === value;
+    if (!storedValue) {
+      return false;
+    }
+
+    const storedValueBuffer = Buffer.from(storedValue);
+    const valueToCompareBuffer = Buffer.from(value);
+
+    // Ensure buffers are the same length before comparing to prevent timing leaks
+    if (storedValueBuffer.length !== valueToCompareBuffer.length) {
+      return false;
+    }
+
+    return timingSafeEqual(storedValueBuffer, valueToCompareBuffer);
   }
 
   getUserPermissionsKey(userId: Uuid): string {

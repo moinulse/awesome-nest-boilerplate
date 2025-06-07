@@ -50,18 +50,16 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
   }
 
   afterLoad(entity: UserEntity): void {
-    if (entity.directPermissions) {
-      const rolePermissions =
-        entity.roles?.flatMap(
-          (role) => role.permissions?.map((p) => p.name) ?? [],
-        ) ?? [];
+    const rolePermissions =
+      entity.roles?.flatMap(
+        (role) => role.permissions?.map((p) => p.name) ?? [],
+      ) ?? [];
 
-      const directPermissions =
-        entity.directPermissions?.map((p) => p.name) ?? [];
+    const directPermissions =
+      entity.directPermissions?.map((p) => p.name) ?? [];
 
-      entity.computedPermissions = [
-        ...new Set([...rolePermissions, ...directPermissions]),
-      ];
-    }
+    entity.computedPermissions = [
+      ...new Set([...rolePermissions, ...directPermissions]),
+    ];
   }
 }
