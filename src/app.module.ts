@@ -14,6 +14,7 @@ import { CacheModule } from './modules/cache/cache.module';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module';
 import { IAMModule } from './modules/iam/iam.module';
 import { UserModule } from './modules/user/user.module';
+import { QueueModule } from './modules/queue/queue.module'; // <-- ADDED IMPORT
 import { ApiConfigService } from './shared/services/api-config.service';
 import { SharedModule } from './shared/shared.module';
 
@@ -22,6 +23,7 @@ import { SharedModule } from './shared/shared.module';
     AuthModule,
     UserModule,
     IAMModule,
+    QueueModule, // <-- ADDED TO IMPORTS ARRAY
     ClsModule.forRoot({
       global: true,
       middleware: {
